@@ -1,3 +1,5 @@
-export function aitChatBotMiddleware (req, res, next) {
-    
+export function aitChatBotMiddleware (secrets) {
+    return (req, res, next) => {
+        
+    }
 }
