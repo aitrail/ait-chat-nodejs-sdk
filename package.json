@@ -7,5 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Kiran T.D., Satish Kumar",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "http-proxy-middleware": "^3.0.0"
+  }
 }
