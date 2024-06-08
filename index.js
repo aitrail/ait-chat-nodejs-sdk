@@ -5,7 +5,7 @@ const { createProxyMiddleware } = require("http-proxy-middleware");
  * @param {object} secrets - The secrets object.
  * @returns {Function} - The middleware function.
  */
-export function aitChatBotMiddleware (secrets) {
+function aitChatBotMiddleware (secrets) {
     return async (req, res, next) => {
         if (req.path === '/api/conversation') {
             const proxy = createProxyMiddleware({
@@ -28,4 +28,8 @@ export function aitChatBotMiddleware (secrets) {
             next();
         }
     }
+}
+
+module.exports = {
+    aitChatBotMiddleware
 }
