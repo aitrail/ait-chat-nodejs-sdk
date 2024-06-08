@@ -1,8 +1,9 @@
 {
-  "name": "ait-chatbot-middleware",
-  "version": "0.0.2",
+  "name": "@aitrail/chat-middleware",
+  "version": "0.0.4",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
