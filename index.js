@@ -1,5 +1,10 @@
 const { createProxyMiddleware } = require("http-proxy-middleware");
 
+/**
+ * Middleware function for AIT Chatbot.
+ * @param {object} secrets - The secrets object.
+ * @returns {Function} - The middleware function.
+ */
 export function aitChatBotMiddleware (secrets) {
     return async (req, res, next) => {
         if (req.path === '/api/conversation') {
