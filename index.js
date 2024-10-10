@@ -10,10 +10,9 @@ const {
  * @returns {Function} - The middleware function.
  */
 
-const http = require("http");
-
-const port = 3000;
 function aitChatBotMiddleware(secrets) {
+    console.log('secrets',secrets);
+    
   return async (req, res, next) => {
     if (req.path === "/api/conversation") {
       const proxy = createProxyMiddleware({
@@ -33,9 +32,9 @@ function aitChatBotMiddleware(secrets) {
       } catch (err) {
         next(err);
       }
-    } else if (secrets.path === "/api/metadata/texts") {
+    } else if (req.path === "/api/metadata/texts") {
       try {
-        const botProperties = await getBotProperties(secrets.query.clientid);
+        const botProperties = await getBotProperties(req.query.clientid);
 
         if (botProperties && botProperties.properties) {
           // Setting the status and sending response
@@ -65,10 +64,10 @@ function aitChatBotMiddleware(secrets) {
           })
         );
       }
-    }else if (secrets.path === "/api/metadata/images") {
+    }else if (req.path === "/api/metadata/images") {
       try {
         // Assuming clientid is passed in the query parameters
-        const botImages = await fetchImages(secrets.query.clientid);
+        const botImages = await fetchImages(req.query.clientid);
 
         // Check if images were successfully retrieved
         if (botImages) {
@@ -97,8 +96,6 @@ function aitChatBotMiddleware(secrets) {
     }
   };
 }
-
-
 
 module.exports = {
   aitChatBotMiddleware,
