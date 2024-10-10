@@ -65,8 +65,7 @@ function aitChatBotMiddleware(secrets) {
           })
         );
       }
-    }
-    if (secrets.path === "/api/metadata/images") {
+    }else if (secrets.path === "/api/metadata/images") {
       try {
         // Assuming clientid is passed in the query parameters
         const botImages = await fetchImages(secrets.query.clientid);
