@@ -46,7 +46,7 @@ const getBotProperties = async (clientid) => {
     const convertedData = await convertBotProperties(data.Item);
 
     return {
-      properties: { ...convertedData, companyName: clientInfo.companyName },
+      properties: { ...convertedData, companyName: clientInfo.companyName.companyname },
     };
   } catch (error) {
     console.error("Error fetching bot properties:", error);
