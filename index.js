@@ -1,8 +1,5 @@
 const { createProxyMiddleware } = require("http-proxy-middleware");
-const {
-  getBotProperties,
-  fetchImages,
-} = require("./ait-metadata");
+const { getBotProperties, fetchImages } = require("./ait-metadata");
 
 /**
  * Middleware function for AIT Chatbot.
@@ -18,6 +15,23 @@ function aitChatBotMiddleware(secrets) {
           "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/conversation",
         changeOrigin: true,
         pathRewrite: { "^/api/conversation": "" },
+        on: {
+          proxyReq: (proxyReq, req, res) => {
+            // If there is a body, modify it to include the clientid
+            if (req.body) {
+              const modifiedBody = { ...req.body, client_id: clientid };
+              const bodyData = JSON.stringify(modifiedBody);
+
+              // Set headers for the new body
+              proxyReq.setHeader("Content-Type", "application/json");
+              proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
+
+              // Write the new body data to the proxy request
+              proxyReq.write(bodyData);
+              proxyReq.end(); // Important to send the request
+            }
+          },
+        },
       });
 
       try {
@@ -62,7 +76,7 @@ function aitChatBotMiddleware(secrets) {
           })
         );
       }
-    }else if (req.path === "/api/metadata/images") {
+    } else if (req.path === "/api/metadata/images") {
       try {
         // Assuming clientid is passed in the query parameters
         const botImages = await fetchImages(secrets?.clientid);
@@ -90,7 +104,7 @@ function aitChatBotMiddleware(secrets) {
         );
       }
     } else {
-        next();
+      next();
     }
   };
 }
