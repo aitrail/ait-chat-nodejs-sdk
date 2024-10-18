@@ -1,13 +1,15 @@
-const { GetItemCommand } = require("@aws-sdk/client-dynamodb");
+const { GetItemCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-
-const { convertBotProperties, convertClientInfo } = require("./utils");
+const { convertBotProperties, convertClientInfo, convertClientSecrets } = require("./utils");
 const { dynamoClient, s3Client } = require("./configs");
+
+require('dotenv').config();
 
 // Access environment variables
 const AIT_CLIENT_TABLE = process.env.AIT_CLIENT_TABLE;
 const AIT_BOT_PROPERTIES = process.env.AIT_BOT_PROPERTIES;
+const AIT_CLIENT_SECRETS = process.env.AIT_CLIENT_SECRETS;
 const bucketName = process.env.AIT_CHAT_BOT_SRC;
 
 const getBotProperties = async (clientid) => {
@@ -49,7 +51,6 @@ const getBotProperties = async (clientid) => {
       properties: { ...convertedData, companyName: clientInfo.companyName.companyname },
     };
   } catch (error) {
-    console.error("Error fetching bot properties:", error);
     return {
       properties: null,
       error: error.message || "Error fetching bot properties",
@@ -94,15 +95,12 @@ const getClientInfo = async (clientid) => {
 
     return { companyName: convertedData };
   } catch (error) {
-    console.error("Error fetching client info:", error);
     return {
       companyName: null,
       error: error.message || "Error fetching client info",
     };
   }
 };
-
-// Retrieve environment variables from process.env
 
 // Function to generate a presigned URL for an S3 object
 const generatePresignedUrl = async (bucketName, key) => {
@@ -115,7 +113,6 @@ const generatePresignedUrl = async (bucketName, key) => {
     // Generate the presigned URL with an expiry of 1 hour (3600 seconds)
     return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
   } catch (error) {
-    console.error(`Error generating presigned URL for key: ${key}`, error);
     throw error; // Re-throw the error to handle it upstream if needed
   }
 };
@@ -123,7 +120,6 @@ const generatePresignedUrl = async (bucketName, key) => {
 // Function to fetch the presigned URL for an image if it exists
 const fetchImageUrl = async (bucketName, path) => {
   if (!bucketName || !path) {
-    console.error("Bucket name or path is missing.");
     return "";
   }
 
@@ -131,7 +127,6 @@ const fetchImageUrl = async (bucketName, path) => {
     // Generate and return the presigned URL for the image
     return await generatePresignedUrl(bucketName, path);
   } catch (error) {
-    console.error(`Error fetching image URL for path: ${path}`, error);
     return ""; // Return an empty string on error
   }
 };
@@ -159,7 +154,6 @@ const fetchImages = async (clientid) => {
 
     return imagesUrl;
   } catch (error) {
-    console.error("Error fetching images:", error);
     return {
       agentAvatar: "",
       agentImage: "",
@@ -168,4 +162,44 @@ const fetchImages = async (clientid) => {
   }
 };
 
-module.exports = { getBotProperties, getClientInfo, fetchImages };
+const checkIsValidSecrets = async (clientid, apiKey) => {
+
+  // Validate input
+  if (!clientid || !apiKey) {
+    return false;
+  }
+
+  // Check if client secrets are configured
+  if (!AIT_CLIENT_SECRETS) {
+    return false;
+  }
+
+  try {
+    const params = {
+      TableName: AIT_CLIENT_SECRETS,
+      KeyConditionExpression: "clientid = :clientid",
+      ExpressionAttributeValues: {
+        ":clientid": { S: clientid },
+      },
+    };
+
+    const command = new QueryCommand(params);
+    const data = await dynamoClient.send(command);
+
+    // Check if any items were returned
+    if (!data.Items || data.Items.length === 0) {
+      return false;
+    }
+
+    // Convert DynamoDB data to usable client info
+    const responseApiKey = await convertClientSecrets(data.Items);
+
+    // Validate API key
+    return responseApiKey.apikey === apiKey;
+  } catch (error) {
+    return false;
+  }
+};
+
+
+module.exports = { getBotProperties, getClientInfo, fetchImages, checkIsValidSecrets };
