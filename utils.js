@@ -32,10 +32,16 @@ const convertClientInfo = async (item) => {
         companyname: item.companyname?.S || "",
     };
 };
+const convertClientSecrets = async (items) => {
+    return {
+        apikey: items[0].apikey.L[0].S || null,
+    };
+};
 
 // Export the functions and constants using CommonJS syntax
 module.exports = {
     botInitialProps,
     convertBotProperties,
     convertClientInfo,
+    convertClientSecrets
 };

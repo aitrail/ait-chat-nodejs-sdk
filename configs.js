@@ -2,6 +2,8 @@
 const { S3Client } = require("@aws-sdk/client-s3");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 
+require('dotenv').config();
+
 // Access environment variables in Node.js
 const {
     AIT_REGION,

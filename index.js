@@ -8,43 +8,82 @@ const { getBotProperties, fetchImages } = require("./ait-metadata");
  */
 
 function aitChatBotMiddleware(secrets) {
-  const { clientid } = secrets;
-  return async (req, res, next) => {
-    if (req.path === "/api/conversation") {
-      const proxy = createProxyMiddleware({
-        target:
-          "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/conversation",
-        changeOrigin: true,
-        pathRewrite: { "^/api/conversation": "" },
-        on: {
-          proxyReq: (proxyReq, req, res) => {
-            // If there is a body, modify it to include the clientid
-            if (req.body) {
-              const modifiedBody = { ...req.body, client_id: clientid };
-              const bodyData = JSON.stringify(modifiedBody);
+  const { clientid, apiKey } = secrets;
 
+  return async (req, res, next) => {
+    if (!clientid?.trim() || !apiKey?.trim()) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      return res.end(
+        JSON.stringify({
+          message: "Clientid and apikey are required.",
+        })
+      );
+    }
+    const isValid = await checkIsValidSecrets(clientid, apiKey);
+    if (!isValid) {
+      res.writeHead(403, { "Content-Type": "application/json" });
+      return res.end(
+        JSON.stringify({
+          message: "Invalid clientid or apikey.",
+        })
+      );
+    }
+    else if (req.path === "/api/conversation") {
+      // Manually read the body from the request (since req.body will be undefined)
+      let bodyChunks = [];
+
+      req.on("data", (chunk) => {
+        bodyChunks.push(chunk);
+      });
+
+      req.on("end", () => {
+        const rawBody = Buffer.concat(bodyChunks).toString();
+
+        let modifiedBody;
+        try {
+          // Parse the original body and add the client_id
+          const originalBody = JSON.parse(rawBody);
+          modifiedBody = { ...originalBody, client_id: clientid };
+        } catch (err) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Invalid JSON format" }));
+          return;
+        }
+
+        const bodyData = JSON.stringify(modifiedBody);
+
+        const proxy = createProxyMiddleware({
+          target: process.env.AIT_BOT_COVERSATION_URL,
+          changeOrigin: true,
+          pathRewrite: { "^/api/conversation": "" },
+          on: {
+            proxyReq: (proxyReq, req, res) => {
               // Set headers for the new body
               proxyReq.setHeader("Content-Type", "application/json");
               proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
 
+              // Set the x-apikey header with your API key
+              proxyReq.setHeader("x-api-key", apiKey);
+
               // Write the new body data to the proxy request
               proxyReq.write(bodyData);
               proxyReq.end(); // Important to send the request
-            }
+            },
           },
-        },
-      });
-
-      try {
-        await new Promise((resolve, reject) => {
-          proxy(req, res, (err) => {
-            if (err) return reject(err);
-            resolve();
-          });
         });
-      } catch (err) {
-        next(err);
-      }
+
+        // Handle the proxy and pass the modified request
+        proxy(req, res, (err) => {
+          if (err) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Proxy request failed" }));
+          }
+        });
+      });
+      req.on("error", (err) => {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Server error" }));
+      });
     } else if (req.path === "/api/metadata/texts") {
       try {
         const botProperties = await getBotProperties(clientid);
