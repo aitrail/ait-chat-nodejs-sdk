@@ -126,9 +126,9 @@ const getClientInfo = async (clientid) => {
 
 // Now AWS s3 chat-bot-src bucket as public accessible by Block public access(off) and add bucket policy
 // This is a object URL Public accessible
-export function getImageUrl(bucketName, key) {
+const getImageUrl = (bucketName, key) => {
   return `https://${bucketName}.s3.${AIT_REGION}.amazonaws.com/${key}`;
-}
+};
 
 // Function to fetch the presigned URL for an image if it exists
 const fetchImageUrl = async (bucketName, path) => {
