@@ -1,16 +1,19 @@
 const { GetItemCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
-const { GetObjectCommand } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { convertBotProperties, convertClientInfo, convertClientSecrets } = require("./utils");
+// const { GetObjectCommand } = require("@aws-sdk/client-s3");
+// const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const {
+  convertBotProperties,
+  convertClientInfo,
+  convertClientSecrets,
+} = require("./utils");
 const { dynamoClient, s3Client } = require("./configs");
 
-require('dotenv').config();
+require("dotenv").config();
 
 // Access environment variables
-const AIT_CLIENT_TABLE = process.env.AIT_CLIENT_TABLE;
-const AIT_BOT_PROPERTIES = process.env.AIT_BOT_PROPERTIES;
-const AIT_CLIENT_SECRETS = process.env.AIT_CLIENT_SECRETS;
 const bucketName = process.env.AIT_CHAT_BOT_SRC;
+const { AIT_REGION, AIT_CLIENT_TABLE, AIT_BOT_PROPERTIES, AIT_CLIENT_SECRETS } =
+  process.env;
 
 const getBotProperties = async (clientid) => {
   // Check for client ID and environment variable
@@ -48,7 +51,10 @@ const getBotProperties = async (clientid) => {
     const convertedData = await convertBotProperties(data.Item);
 
     return {
-      properties: { ...convertedData, companyName: clientInfo.companyName.companyname },
+      properties: {
+        ...convertedData,
+        companyName: clientInfo.companyName.companyname,
+      },
     };
   } catch (error) {
     return {
@@ -102,20 +108,27 @@ const getClientInfo = async (clientid) => {
   }
 };
 
-// Function to generate a presigned URL for an S3 object
-const generatePresignedUrl = async (bucketName, key) => {
-  try {
-    const command = new GetObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-    });
+//Commented this function for future generatePresigned URL
+// // Function to generate a presigned URL for an S3 object
+// const generatePresignedUrl = async (bucketName, key) => {
+//   try {
+//     const command = new GetObjectCommand({
+//       Bucket: bucketName,
+//       Key: key,
+//     });
 
-    // Generate the presigned URL with an expiry of 1 hour (3600 seconds)
-    return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-  } catch (error) {
-    throw error; // Re-throw the error to handle it upstream if needed
-  }
-};
+//     // Generate the presigned URL with an expiry of 1 hour (3600 seconds)
+//     return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+//   } catch (error) {
+//     throw error; // Re-throw the error to handle it upstream if needed
+//   }
+// };
+
+// Now AWS s3 chat-bot-src bucket as public accessible by Block public access(off) and add bucket policy
+// This is a object URL Public accessible
+export function getImageUrl(bucketName, key) {
+  return `https://${bucketName}.s3.${AIT_REGION}.amazonaws.com/${key}`;
+}
 
 // Function to fetch the presigned URL for an image if it exists
 const fetchImageUrl = async (bucketName, path) => {
@@ -125,7 +138,7 @@ const fetchImageUrl = async (bucketName, path) => {
 
   try {
     // Generate and return the presigned URL for the image
-    return await generatePresignedUrl(bucketName, path);
+    return getImageUrl(bucketName, path);
   } catch (error) {
     return ""; // Return an empty string on error
   }
@@ -201,5 +214,9 @@ const checkIsValidSecrets = async (clientid, apiKey) => {
   }
 };
 
-
-module.exports = { getBotProperties, getClientInfo, fetchImages, checkIsValidSecrets };
+module.exports = {
+  getBotProperties,
+  getClientInfo,
+  fetchImages,
+  checkIsValidSecrets,
+};
