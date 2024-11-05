@@ -1,5 +1,43 @@
 const { createProxyMiddleware } = require("http-proxy-middleware");
-const { getBotProperties, fetchImages } = require("./ait-metadata");
+const { checkIsValidSecrets } = require("./ait-metadata");
+require("dotenv").config();
+
+/**
+ * Middleware for creating proxy to Lambda endpoints.
+ * @param {string} targetUrl - The target URL for the Lambda endpoint.
+ * @param {string} pathPrefix - The API path prefix to remove from the request.
+ * @returns {Function} - A configured proxy middleware.
+ */
+const createLambdaProxy = (targetUrl, pathPrefix,clientid) => {
+  if (!targetUrl) {
+    throw new Error(
+      `[HPM] Missing "target" option. Ensure the environment variable for ${pathPrefix} is set.`
+    );
+  }
+
+  return createProxyMiddleware({
+    target: targetUrl+`?clientid=${clientid}`,
+    changeOrigin: true,
+    pathRewrite: {
+      [`^${pathPrefix}`]: "", // Remove the API path prefix if not needed
+    },
+    onProxyReq: (proxyReq) => {
+      proxyReq.setHeader("Content-Type", "application/json");
+    },
+    onError: (err, req, res) => {
+      console.error("Proxy error:", err);
+      res.writeHead(500, {
+        "Content-Type": "application/json",
+      });
+      res.end(
+        JSON.stringify({
+          success: false,
+          message: "Proxy error occurred while contacting Lambda",
+        })
+      );
+    },
+  });
+};
 
 /**
  * Middleware function for AIT Chatbot.
@@ -10,7 +48,7 @@ const { getBotProperties, fetchImages } = require("./ait-metadata");
 function aitChatBotMiddleware(secrets) {
   const { clientid, apiKey } = secrets;
 
-  return async (req, res, next) => {
+  return async (req, res) => {
     if (!clientid?.trim() || !apiKey?.trim()) {
       res.writeHead(400, { "Content-Type": "application/json" });
       return res.end(
@@ -28,8 +66,20 @@ function aitChatBotMiddleware(secrets) {
         })
       );
     }
-    else if (req.path === "/api/conversation") {
-      // Manually read the body from the request (since req.body will be undefined)
+    // Set up proxies with clientid added as a query parameter
+    const lambdaProxyMetaDataTexts = createLambdaProxy(
+      process.env.AIT_BOT_METADATA_TEXTS,
+      "/api/metadata/texts",
+      clientid
+    );
+
+    const lambdaProxyMetaDataImages = createLambdaProxy(
+      process.env.AIT_BOT_METADATA_IMAGES,
+      "/api/metadata/images",
+      clientid
+    );
+
+    if (req.url === "/api/conversation") {
       let bodyChunks = [];
 
       req.on("data", (chunk) => {
@@ -46,8 +96,7 @@ function aitChatBotMiddleware(secrets) {
           modifiedBody = { ...originalBody, client_id: clientid };
         } catch (err) {
           res.writeHead(400, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: "Invalid JSON format" }));
-          return;
+          return res.end(JSON.stringify({ error: "Invalid JSON format" }));
         }
 
         const bodyData = JSON.stringify(modifiedBody);
@@ -84,71 +133,18 @@ function aitChatBotMiddleware(secrets) {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Server error" }));
       });
-    } else if (req.path === "/api/metadata/texts") {
-      try {
-        const botProperties = await getBotProperties(clientid);
-
-        if (botProperties && botProperties.properties) {
-          // Setting the status and sending response
-          res.writeHead(200, { "Content-Type": "application/json" });
-          return res.end(
-            JSON.stringify({
-              success: true,
-              properties: botProperties.properties,
-            })
-          );
-        } else {
-          // Handling not found scenario
-          res.writeHead(404, { "Content-Type": "application/json" });
-          return res.end(
-            JSON.stringify({
-              success: false,
-              message: "Bot properties not found",
-            })
-          );
-        }
-      } catch (error) {
-        res.writeHead(500, { "Content-Type": "application/json" });
-        return res.end(
-          JSON.stringify({
-            success: false,
-            message: "Error fetching bot properties",
-          })
-        );
-      }
-    } else if (req.path === "/api/metadata/images") {
-      try {
-        // Assuming clientid is passed in the query parameters
-        const botImages = await fetchImages(clientid);
-
-        // Check if images were successfully retrieved
-        if (botImages) {
-          // Respond with JSON for successful retrieval
-          res.writeHead(200, { "Content-Type": "application/json" });
-          return res.end(JSON.stringify({ success: true, images: botImages }));
-        } else {
-          // Respond with 404 if no images are found
-          res.writeHead(404, { "Content-Type": "application/json" });
-          return res.end(
-            JSON.stringify({ success: false, message: "Images not found" })
-          );
-        }
-      } catch (error) {
-        // Respond with 500 in case of an error
-        res.writeHead(500, { "Content-Type": "application/json" });
-        return res.end(
-          JSON.stringify({
-            success: false,
-            message: "Error fetching bot images",
-          })
-        );
-      }
+    } else if (req.url === "/api/metadata/texts") {
+      // Proxy request to metadata texts Lambda
+      lambdaProxyMetaDataTexts(req, res);
+    } else if (req.url === "/api/metadata/images") {
+      // Proxy request to metadata images Lambda
+      lambdaProxyMetaDataImages(req, res);
     } else {
-      next();
+      // If no matching route, send a 404 response
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Not Found" }));
     }
   };
 }
 
-module.exports = {
-  aitChatBotMiddleware,
-};
+module.exports = aitChatBotMiddleware;
