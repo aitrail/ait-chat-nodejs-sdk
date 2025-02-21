@@ -8,7 +8,7 @@ require("dotenv").config();
  * @param {string} pathPrefix - The API path prefix to remove from the request.
  * @returns {Function} - A configured proxy middleware.
  */
-const createLambdaProxy = (targetUrl, pathPrefix,clientid) => {
+const createLambdaProxy = (targetUrl, pathPrefix, clientid) => {
   if (!targetUrl) {
     throw new Error(
       `[HPM] Missing "target" option. Ensure the environment variable for ${pathPrefix} is set.`
@@ -16,7 +16,7 @@ const createLambdaProxy = (targetUrl, pathPrefix,clientid) => {
   }
 
   return createProxyMiddleware({
-    target: targetUrl+`?clientid=${clientid}`,
+    target: targetUrl + `?clientid=${clientid}`,
     changeOrigin: true,
     pathRewrite: {
       [`^${pathPrefix}`]: "", // Remove the API path prefix if not needed
