@@ -65,12 +65,12 @@ function aitChatBotMiddleware(secrets) {
     );
 
     const lambdaProxyMetaDataImages = createLambdaProxy(
-      process.env.AIT_BOT_METADATA_IMAGES,
       "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/metadata/images",
+      "/api/metadata/images",
       clientid
     );
 
-    if (req.url === "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/conversation") {
+    if (req.url === "/api/conversation") {
       let bodyChunks = [];
 
       req.on("data", (chunk) => {
@@ -93,7 +93,7 @@ function aitChatBotMiddleware(secrets) {
         const bodyData = JSON.stringify(modifiedBody);
 
         const proxy = createProxyMiddleware({
-          target: process.env.AIT_BOT_COVERSATION_URL,
+          target: "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/conversation",
           changeOrigin: true,
           pathRewrite: { "^/api/conversation": "" },
           on: {
