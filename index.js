@@ -59,18 +59,18 @@ function aitChatBotMiddleware(secrets) {
 
     // Set up proxies with clientid added as a query parameter
     const lambdaProxyMetaDataTexts = createLambdaProxy(
-      process.env.AIT_BOT_METADATA_TEXTS,
+      "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/metadata/texts",
       "/api/metadata/texts",
       clientid
     );
 
     const lambdaProxyMetaDataImages = createLambdaProxy(
       process.env.AIT_BOT_METADATA_IMAGES,
-      "/api/metadata/images",
+      "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/metadata/images",
       clientid
     );
 
-    if (req.url === "/api/conversation") {
+    if (req.url === "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/conversation") {
       let bodyChunks = [];
 
       req.on("data", (chunk) => {
