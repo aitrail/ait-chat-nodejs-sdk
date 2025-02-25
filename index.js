@@ -1,5 +1,4 @@
 const { createProxyMiddleware } = require("http-proxy-middleware");
-const { checkIsValidSecrets } = require("./ait-metadata");
 require("dotenv").config();
 
 /**
@@ -57,15 +56,7 @@ function aitChatBotMiddleware(secrets) {
         })
       );
     }
-    const isValid = await checkIsValidSecrets(clientid, apiKey);
-    if (!isValid) {
-      res.writeHead(403, { "Content-Type": "application/json" });
-      return res.end(
-        JSON.stringify({
-          message: "Invalid clientid or apikey.",
-        })
-      );
-    }
+
     // Set up proxies with clientid added as a query parameter
     const lambdaProxyMetaDataTexts = createLambdaProxy(
       process.env.AIT_BOT_METADATA_TEXTS,

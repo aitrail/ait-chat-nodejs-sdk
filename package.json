@@ -1,6 +1,6 @@
 {
   "name": "@aitrail/chat-middleware",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "",
   "main": "index.js",
   "type": "commonjs",
@@ -10,9 +10,6 @@
   "author": "Kiran T.D., Satish Kumar",
   "license": "CC-BY-NC-4.0",
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.668.0",
-    "@aws-sdk/client-s3": "^3.668.0",
-    "@aws-sdk/s3-request-presigner": "^3.668.0",
     "dotenv": "^16.4.5",
     "http-proxy-middleware": "^3.0.0"
   }
