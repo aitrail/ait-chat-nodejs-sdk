@@ -39,7 +39,7 @@ Sign up for a free account, create a workspace, get your api key and client id, 
 Once your server is running, you can start interacting with the chatbot. Try sending a request to see your first greeting from the chatbot!
 
 ## License
-This package is open-source and available under the MIT License.
+This package is open-source and available under the Apache 2.0 License.
 
 ## Keywords
 Chatbot, AI chatbot, Chatbot UI, Express middleware, Chatbot integration, AI Trail, Node.js chatbot, Server setup, AI assistant
