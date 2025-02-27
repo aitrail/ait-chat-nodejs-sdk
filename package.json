@@ -2,14 +2,14 @@
   "name": "@aitrail/chat-middleware",
   "version": "0.0.6",
   "description": "",
-  "main": "index.js",
-  "type": "commonjs",
+  "exports": "./index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Kiran T.D., Satish Kumar",
   "license": "CC-BY-NC-4.0",
-  "dependencies": {
+  "peerDependencies": {
     "dotenv": "^16.4.5",
     "http-proxy-middleware": "^3.0.0"
   }

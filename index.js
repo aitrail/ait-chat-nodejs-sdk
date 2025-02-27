@@ -1,5 +1,5 @@
-const { createProxyMiddleware } = require("http-proxy-middleware");
-require("dotenv").config();
+import {createProxyMiddleware} from "http-proxy-middleware"
+import 'dotenv/config'
 
 /**
  * Middleware for creating proxy to Lambda endpoints.
@@ -44,7 +44,7 @@ const createLambdaProxy = (targetUrl, pathPrefix, clientid) => {
  * @returns {Function} - The middleware function.
  */
 
-function aitChatBotMiddleware(secrets) {
+export default function aitChatBotMiddleware(secrets) {
   const { clientid, apiKey } = secrets;
 
   return async (req, res) => {
@@ -137,5 +137,3 @@ function aitChatBotMiddleware(secrets) {
     }
   };
 }
-
-module.exports = aitChatBotMiddleware;
