@@ -59,13 +59,14 @@ export default function aitChatBotMiddleware(secrets) {
 
     // Set up proxies with clientid added as a query parameter
     const lambdaProxyMetaDataTexts = createLambdaProxy(
-      "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/metadata/texts",
+      "https://aitrail.ai/api/metadata/texts",
       "/api/metadata/texts",
       clientid
     );
 
+
     const lambdaProxyMetaDataImages = createLambdaProxy(
-      "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/metadata/images",
+      "https://aitrail.ai/api/metadata/images",
       "/api/metadata/images",
       clientid
     );
@@ -93,7 +94,7 @@ export default function aitChatBotMiddleware(secrets) {
         const bodyData = JSON.stringify(modifiedBody);
 
         const proxy = createProxyMiddleware({
-          target: "http://ait-query-api.us-east-1.elasticbeanstalk.com/api/conversation",
+          target: "https://aitrail.ai/api/conversation",
           changeOrigin: true,
           pathRewrite: { "^/api/conversation": "" },
           on: {
