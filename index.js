@@ -5,6 +5,7 @@ import 'dotenv/config'
  * Middleware for creating proxy to Lambda endpoints.
  * @param {string} targetUrl - The target URL for the Lambda endpoint.
  * @param {string} pathPrefix - The API path prefix to remove from the request.
+ * @param {string} clientid - The unique ID to identify and access your assets in AITrail.
  * @returns {Function} - A configured proxy middleware.
  */
 const createLambdaProxy = (targetUrl, pathPrefix, clientid) => {
@@ -40,14 +41,18 @@ const createLambdaProxy = (targetUrl, pathPrefix, clientid) => {
 
 /**
  * Middleware function for AIT Chatbot.
- * @param {object} secrets - The secrets object.
- * @returns {Function} - The middleware function.
+ * @param {Object} secrets - The secrets object.
+ * @param {String} secrets.clientid - The unique ID to identify and access your assets in AITrail.
+ * @param {String} secrets.apiKey - The unique token to authorize yourself to access Chatbot's endpoints.
+ * @returns {Function} - The middleware function to deliver the title, description, images and chat responses.
  */
 
 export default function aitChatBotMiddleware(secrets) {
   const { clientid, apiKey } = secrets;
 
   return async (req, res) => {
+
+    // End the process if either client ID or Api key is missing
     if (!clientid?.trim() || !apiKey?.trim()) {
       res.writeHead(400, { "Content-Type": "application/json" });
       return res.end(
@@ -64,13 +69,13 @@ export default function aitChatBotMiddleware(secrets) {
       clientid
     );
 
-
     const lambdaProxyMetaDataImages = createLambdaProxy(
       "https://aitrail.ai/api/metadata/images",
       "/api/metadata/images",
       clientid
     );
 
+    // "/api/conversation" delivers the response to the questions
     if (req.url === "/api/conversation") {
       let bodyChunks = [];
 
@@ -121,10 +126,12 @@ export default function aitChatBotMiddleware(secrets) {
           }
         });
       });
+
       req.on("error", (err) => {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Server error" }));
       });
+
     } else if (req.url === "/api/metadata/texts") {
       // Proxy request to metadata texts Lambda
       lambdaProxyMetaDataTexts(req, res);
