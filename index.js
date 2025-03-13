@@ -64,13 +64,13 @@ export default function aitChatBotMiddleware(secrets) {
 
     // Set up proxies with clientid added as a query parameter
     const lambdaProxyMetaDataTexts = createLambdaProxy(
-      "https://aitrail.ai/api/metadata/texts",
+      "https://api.aitrail.ai/api/metadata/texts",
       "/api/metadata/texts",
       clientid
     );
 
     const lambdaProxyMetaDataImages = createLambdaProxy(
-      "https://aitrail.ai/api/metadata/images",
+      "https://api.aitrail.ai/api/metadata/images",
       "/api/metadata/images",
       clientid
     );
@@ -99,7 +99,7 @@ export default function aitChatBotMiddleware(secrets) {
         const bodyData = JSON.stringify(modifiedBody);
 
         const proxy = createProxyMiddleware({
-          target: "https://aitrail.ai/api/conversation",
+          target: "https://api.aitrail.ai/api/conversation",
           changeOrigin: true,
           pathRewrite: { "^/api/conversation": "" },
           on: {
