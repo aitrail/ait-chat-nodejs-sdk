@@ -7,19 +7,24 @@ This guide provides a step-by-step process for setting up the server configurati
 To get started, install the required dependencies:
 
 ```sh
-npm install ait-chat-middleware express
+npm install @aitrail/chat-middleware express
 ```
 
 ## Usage
 To enable smooth interaction between your application and the chatbot API, integrate the middleware in your server.
 
 ```javascript
-const express = require('express');
-const app = express();
-const aitProxyMiddleware = require('ait-chat-middleware');
+import express from 'express';
+import { aitChatBotMiddleware } from '@aitrail/chat-middleware';
 
-const secrets = { apiKey: 'your-token', clientid: 'your-clientid };
-app.use(aitProxyMiddleware(secrets));
+const app = express();
+
+const secrets = {
+  apiKey: "Your apiKey",
+  clientid: "Your clientid",
+};
+
+app.use(aitChatBotMiddleware(secrets));
 
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
