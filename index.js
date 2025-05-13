@@ -1,5 +1,5 @@
-import {createProxyMiddleware} from "http-proxy-middleware"
-import 'dotenv/config'
+import { createProxyMiddleware } from "http-proxy-middleware";
+import "dotenv/config";
 
 /**
  * Middleware for creating proxy to Lambda endpoints.
@@ -47,11 +47,10 @@ const createLambdaProxy = (targetUrl, pathPrefix, clientid) => {
  * @returns {Function} - The middleware function to deliver the title, description, images and chat responses.
  */
 
-export default function aitChatBotMiddleware(secrets) {
+export function aitChatBotMiddleware(secrets) {
   const { clientid, apiKey } = secrets;
 
   return async (req, res) => {
-
     // End the process if either client ID or Api key is missing
     if (!clientid?.trim() || !apiKey?.trim()) {
       res.writeHead(400, { "Content-Type": "application/json" });
@@ -131,7 +130,6 @@ export default function aitChatBotMiddleware(secrets) {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Server error" }));
       });
-
     } else if (req.url === "/api/metadata/texts") {
       // Proxy request to metadata texts Lambda
       lambdaProxyMetaDataTexts(req, res);
