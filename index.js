@@ -50,7 +50,18 @@ const createLambdaProxy = (targetUrl, pathPrefix, clientid) => {
 export function aitChatBotMiddleware(secrets) {
   const { clientid, apiKey } = secrets;
 
-  return async (req, res) => {
+  // Define allowed routes
+  const allowedRoutes = [
+    "/api/conversation",
+    "/api/metadata/texts",
+    "/api/metadata/images",
+  ];
+
+  return async (req, res, next) => {
+    // Skip this middleware if the path is not in the allowed list
+    if (!allowedRoutes.includes(req.path)) {
+      return next(); // Pass control to the next middleware or route
+    }
     // End the process if either client ID or Api key is missing
     if (!clientid?.trim() || !apiKey?.trim()) {
       res.writeHead(400, { "Content-Type": "application/json" });
