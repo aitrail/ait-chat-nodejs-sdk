@@ -9,8 +9,11 @@
   },
   "author": "Kiran T.D., Satish Kumar",
   "license": "CC-BY-NC-4.0",
-  "peerDependencies": {
-    "dotenv": "^16.4.5",
+  "dependencies": {
     "http-proxy-middleware": "^3.0.0"
+  },
+  "peerDependencies": {
+    "express": "^4.21.2",
+    "dotenv": "^16.4.5"
   }
 }
