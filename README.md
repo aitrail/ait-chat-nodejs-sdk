@@ -3,6 +3,16 @@
 ## Overview
 This guide provides a step-by-step process for setting up the server configuration for Chatbot UI. It assumes that you have already configured the Chatbot UI successfully. Here, you will learn how to install and configure the necessary middleware for seamless communication with the chatbot API.
 
+## Prerequisites
+
+This package assumes that `express` is installed in your application. If it is not installed, you can add it by running:
+
+- [Express](https://expressjs.com/) (required)
+
+```sh
+npm install express
+```
+
 ## Installation
 To get started, install the required dependencies:
 
@@ -25,10 +35,6 @@ const secrets = {
 };
 
 app.use(aitChatBotMiddleware(secrets));
-
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
-});
 ```
 
 ## Create a Free Trial Account
